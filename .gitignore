@@ -1,0 +1,8 @@
+.mypy_cache
+.venv
+.vscode
+.idea
+tmp/*
+!tmp/.keep
+.nicegui/
+__pycache__
