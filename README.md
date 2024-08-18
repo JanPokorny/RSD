@@ -31,17 +31,16 @@ Recommended: Ubuntu 22.04, everything else is _hic sunt leones_.
 #### Install
 
 ```bash
-sudo apt install -y mpd snapserver snapclient python3.11 python3.11-venv
+sudo apt install -y mpd snapserver snapclient python3.11 python3.11-venv python3-poetry
 sudo systemctl disable snapserver
 sudo pkill snapserver
-python3.11 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+poetry install
 ```
 
 #### Run
 
 ```bash
-.venv/bin/honcho start
+poetry run honcho start
 ```
 
 Access the web interface on `http://<host IP>:8080`.
