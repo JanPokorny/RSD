@@ -31,10 +31,10 @@ Recommended: Ubuntu 22.04, everything else is _hic sunt leones_.
 #### Install
 
 ```bash
-sudo apt install -y mpd snapserver snapclient python3-venv
+sudo apt install -y mpd snapserver snapclient python3.11 python3.11-venv
 sudo systemctl disable snapserver
 sudo pkill snapserver
-python3 -m venv .venv
+python3.11 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
