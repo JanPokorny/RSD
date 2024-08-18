@@ -14,8 +14,10 @@ QUICK_ACCESS = {
         PlayRequestAudioItem(path=find_audio_file("budicek2")),
         PlayRequestAudioItem(path=find_audio_file("budicek3"))
     ]),
-    'directions_run': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra"))]),
-    'soup_kitchen': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("obed"))]),
+    'directions_walk': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra1"))]),
+    'directions_run': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra2"))]),
+    'self_improvement': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra3"))]),
+    'bakery_dining': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("obed"))]),
     'dinner_dining': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("vecere"))]),
 }
 
