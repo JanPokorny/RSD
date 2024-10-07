@@ -15,7 +15,7 @@ def tts_to_file(text: str, file_path: Path) -> None:
     global tts
     low_vol_out_path = file_path.with_stem(file_path.stem + "_lowvol")
     if tts is None:
-        tts = TTS(config.TTS_MODEL)
+        tts = TTS(list(config.VOICE_MODELS.values())[0])
     tts.tts_to_file(text=text, file_path=str(low_vol_out_path))
     AudioFileClip(str(low_vol_out_path)) \
         .fx(afx.audio_normalize) \
