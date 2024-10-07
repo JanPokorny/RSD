@@ -95,7 +95,8 @@ class PlayRequest(pydantic.BaseModel):
             self.pending = False
 
     def summary(self) -> str:
-        return " | ".join(request_item.summary() for request_item in self.items)
+        cond_newline = "\n" if self.heading else ""
+        return f'<span class="text-lg font-bold">{self.heading}</span>{cond_newline}' + " | ".join(request_item.summary() for request_item in self.items)
 
     def to_dict(self) -> dict:
         return {
