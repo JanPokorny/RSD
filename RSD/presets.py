@@ -5,7 +5,10 @@ from RSD.models import PlayRequest, PlayRequestAudioItem, PlayRequestTTSItem
 
 
 def find_audio_file(name: str) -> Path:
-    return Path(next((str(path.resolve()) for path in Path(config.DATA_PATH).glob(f"**/{name}.*"))))
+    file_path = Path(next((str(path.resolve()) for path in Path(config.DATA_PATH).glob(f"**/{name}.*"))))
+    if file_path is None:
+        raise FileNotFoundError(f"No audio file found for {name}")
+    return Path(file_path)
 
 
 QUICK_ACCESS = {
@@ -14,9 +17,9 @@ QUICK_ACCESS = {
         PlayRequestAudioItem(path=find_audio_file("budicek2")),
         PlayRequestAudioItem(path=find_audio_file("budicek3"))
     ]),
-    'directions_walk': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra1"))]),
-    'directions_run': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra2"))]),
-    'self_improvement': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra3"))]),
+    'directions_walk': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra"))]),
+    'directions_run': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra"))]),
+    'self_improvement': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("hra"))]),
     'bakery_dining': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("obed"))]),
     'dinner_dining': PlayRequest(items=[PlayRequestAudioItem(path=find_audio_file("vecere"))]),
 }
