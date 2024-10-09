@@ -98,6 +98,7 @@ def index():
 
     audio_options = {path.resolve(): path.stem for path in sorted(config.AUDIO_PATH.glob("*.*"))}
     background_options = {None: "No background"} | {path.resolve(): path.stem.capitalize() for path in sorted(config.BACKGROUND_PATH.glob("*.*"))}
+    voice_options = [model for model in config.VOICE_MODELS.keys()]
 
     ui.query('.nicegui-content').classes('max-w-[800px] m-auto')
 
@@ -181,6 +182,9 @@ def index():
                     with ui.row().classes('w-full items-center'):
                         ui.icon('music_note').classes('text-2xl')
                         ui.select(options=background_options).bind_value(item, 'background_path').classes('grow')
+                    with ui.row().classes('w-full items-center'):
+                        ui.icon('record_voice_over').classes('text-2xl')
+                        ui.select(options=voice_options).bind_value(item, 'voice_model').classes('grow')
                     with ui.row().classes('w-full items-center'):
                         ui.icon('repeat').classes('text-2xl')
                         ui.toggle(options={False: "1×", True: "2×"}).bind_value(item, 'repeat')
