@@ -11,12 +11,11 @@ from RSD import config
 tts: TTS | None = None
 
 
-def tts_to_file(text: str, file_path: Path) -> None:
-    global tts
+def tts_to_file(text: str, file_path: Path, voice_model: TTS) -> None:
     low_vol_out_path = file_path.with_stem(file_path.stem + "_lowvol")
-    if tts is None:
-        tts = TTS(config.TTS_MODEL)
-    tts.tts_to_file(text=text, file_path=str(low_vol_out_path))
+    if voice_model is None:
+        voice_model = list(config.VOICE_MODELS.values())[0]
+    voice_model.tts_to_file(text=text, file_path=str(low_vol_out_path))
     AudioFileClip(str(low_vol_out_path)) \
         .fx(afx.audio_normalize) \
         .fx(afx.volumex, 2.0) \
@@ -24,11 +23,11 @@ def tts_to_file(text: str, file_path: Path) -> None:
     low_vol_out_path.unlink()
 
 
-def read_to_file(text: str, repeat: bool, background_path: Path | None) -> str:
+def read_to_file(text: str, repeat: bool, background_path: Path | None, voice_model: TTS) -> str:
     text = f"{text}\n\n{config.REPEAT_ANNOUNCEMENT_JOINER_TEXT}\n\n{text}" if repeat else text
     path_nobg = output_file_path(text, background_path=None)
     if not path_nobg.is_file():
-        tts_to_file(text, path_nobg)
+        tts_to_file(text, path_nobg, voice_model)
     path_nobg.touch()
 
     path_bg = None
@@ -49,8 +48,8 @@ def read_to_file(text: str, repeat: bool, background_path: Path | None) -> str:
     return str((path_bg or path_nobg).resolve())
 
 
-async def read_to_file_async(text: str, repeat: bool, background_path: Path | None) -> str:
-    return await asyncio.get_event_loop().run_in_executor(None, read_to_file, text, repeat, background_path)
+async def read_to_file_async(text: str, repeat: bool, background_path: Path | None, voice_model: TTS) -> str:
+    return await asyncio.get_event_loop().run_in_executor(None, read_to_file, text, repeat, background_path, voice_model)
 
 
 # HELPERS
