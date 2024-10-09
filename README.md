@@ -11,6 +11,7 @@ A system with a web GUI to play songs and TTS utterances on multiple devices at 
 - Control what is played from anywhere using a web interface
 - Schedule events for a specific time
 - Browse and search the play history
+- Schedule events using discord bot
 
 At the current state, the system is tuned for using a Czech TTS voice and has quick access presets for alarm, playtime, lunch and dinner music.
 
@@ -68,6 +69,18 @@ Install and use the application [Snap.Net](https://github.com/stijnvdb88/snap.ne
 #### Android
 
 Install and use the application [Snapcast](https://play.google.com/store/apps/details?id=de.badaix.snapcast&hl=en_US&gl=US).
+
+### Discord bot
+Create `.env` file having `Token of your discord bot` and `id of your guild(=server)`. Then run 
+```bash
+poetry run collect-audio
+```
+to generate config file which found audio tracks. And finally get bot running:
+```bash
+poetry run run-discord-bot
+```
+
+
 
 ## FAQ
 

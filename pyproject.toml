@@ -4,14 +4,17 @@ version = "0.1.0"
 description = ""
 authors = ["Jan Pokorný <jenompokorny@gmail.com>"]
 readme = "README.md"
-packages = [{include = "RSD"}]
+packages = [{ include = "RSD" }]
 
 [tool.poetry.dependencies]
-python = "3.11"
+python = "~3.11"
 moviepy = "^1.0.3"
 TTS = "^0.22.0"
 python-mpd2 = "^3.1.1"
 nicegui = "^1.4.35"
+snapcast = "^2.3.6"
+pydub = "^0.25.1"
+discord = "^2.3.2"
 
 [tool.poetry.group.dev.dependencies]
 honcho = "^1.1.0"
@@ -19,3 +22,7 @@ honcho = "^1.1.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+collect-audio = "collect_audio:start"
+run-discord-bot = "bot.rsd:run_bot"
