@@ -12,6 +12,7 @@ moviepy = "^1.0.3"
 TTS = "^0.22.0"
 python-mpd2 = "^3.1.1"
 nicegui = "^1.4.35"
+snapcast = "^2.3.6"
 
 [tool.poetry.group.dev.dependencies]
 honcho = "^1.1.0"

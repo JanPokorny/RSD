@@ -38,9 +38,9 @@ get_devices: Callable[[], list[Device]] = partial(
 
 @ui.page('/')
 def index():
-    async def play_request(request):
+    async def play_request(request, targets: player.TargetSnapClients = None):
         ui.notify("Loading...", type="info")
-        player.play_playlist(await request.get_urls())
+        await player.play_playlist(await request.get_urls(), targets)
         app.storage.general['history'].insert(0, (f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}: {request.summary()}", request.to_dict()))
         history_loader.refresh()
 
@@ -50,6 +50,16 @@ def index():
         ui.notify("Saved draft to history", type="positive")
 
     state = DevicesRowState()
+
+    def get_targets() -> player.TargetSnapClients:
+        clients = [
+            dev.id
+            for dev, selected in zip(state.devices, state.selected)
+            if selected
+        ] if not state.all_checkbox.value else None
+        print("targets: ", clients, flush=True)
+        # return clients if clients != [] else None
+        return clients
 
     prepared_play_request = PlayRequest.from_dict(presets.DEFAULT_PLAY_REQUEST.to_dict())
     
@@ -246,7 +256,11 @@ def index():
                     ui.button(icon='save', text='save to schedule', on_click=save_request_to_schedule).classes('w-full')
 
                 ui.button(icon='more_time', on_click=time_picker_dialog.open).classes('inline-block').classes('text-xl')
-                ui.button(icon='play_arrow', text='play', on_click=lambda: play_request(prepared_play_request)).classes('inline-block').classes('text-xl')
+                ui.button(icon='play_arrow', text='play',
+                    on_click=lambda: play_request(
+                        prepared_play_request,
+                          get_targets()
+                        )).classes('inline-block').classes('text-xl')
 
         @ui.refreshable
         def schedule_ui():
@@ -292,7 +306,7 @@ async def play_scheduled():
         return
     summary, data = entry
     request = PlayRequest.from_dict(data)
-    player.play_playlist(await request.get_urls())
+    await player.play_playlist(await request.get_urls())
     app.storage.general['history'].insert(0, (f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}: {request.summary()}", request.to_dict()))
 
 ui.timer(10, play_scheduled)
