@@ -97,6 +97,8 @@ class PlayRequestAudioItem(PlayRequestItem):
 class PlayRequest(pydantic.BaseModel):
     items: list[PlayRequestItem]
     pending: bool = False
+    delay_s: int = 0
+    heading: str = ""
 
     async def get_urls(self) -> list[str]:
         try:
@@ -111,12 +113,15 @@ class PlayRequest(pydantic.BaseModel):
             self.pending = False
 
     def summary(self) -> str:
-        return " | ".join(request_item.summary() for request_item in self.items)
+        cond_newline = "\n" if self.heading else ""
+        return f'<span class="text-lg font-bold">{self.heading}</span>{cond_newline}' + " | ".join(request_item.summary() for request_item in self.items)
 
     def to_dict(self) -> dict:
         return {
             "items": [item.to_dict() for item in self.items],
             "pending": self.pending,
+            "delay_s": self.delay_s,
+            "heading": self.heading,
         }
 
     @staticmethod
@@ -124,4 +129,6 @@ class PlayRequest(pydantic.BaseModel):
         return PlayRequest(
             items=[PlayRequestItem.from_dict(item) for item in data["items"]],
             pending=data["pending"],
+            delay_s=data.get("delay_s", 0),
+            heading=data.get("heading", ""),
         )

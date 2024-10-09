@@ -1,9 +1,11 @@
 from pathlib import Path
-
+import json
+from fastapi import Request
 from nicegui import ui, app
 import datetime
+from typing import Any, Iterable
 
-from RSD import config, player, presets
+from RSD import config, player, presets, generated_config
 from RSD.models import PlayRequest, PlayRequestTTSItem, PlayRequestAudioItem
 
 
@@ -12,6 +14,59 @@ if not app.storage.general.get('history'):
 
 if not app.storage.general.get('schedule'):
     app.storage.general['schedule'] = {}
+
+
+notification_message = ""
+notification_type = ""
+NOTIFY_CMD = "INCOMING COMMAND..."
+
+
+def update_ui():
+    global notification_message
+    if notification_message:
+        ui.notify(notification_message, type=notification_type or "info")
+        notification_message = ""  # Clear the message after notifying
+
+
+@app.post('/command')
+async def command(request: Request):
+    def now_str() -> str:
+        return datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+
+    def modify_items_add_paths(items: Iterable[dict[str, Any]]) -> None:
+        for item in items:
+            if item["type"] == "tts":
+                item["background_path"] = generated_config.AUDIOS[item["background_path"]]
+            if item["type"] == "audio":
+                item["path"] = generated_config.AUDIOS[item["path"]]
+
+
+    json_data = await request.json()
+    modify_items_add_paths(json_data["items"])
+    print(json_data, flush=True)
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>....", flush=True)
+
+    global notification_message
+    notification_message = NOTIFY_CMD
+
+    prepared_play_request = PlayRequest.from_dict(json_data)
+    file_url = await prepared_play_request.get_urls()
+
+    file_url = [x for x, y in zip(file_url, json_data["items"]) if y["type"] == "tts"]
+    # Immediately invoked hlaseni
+    # player.play_playlist(file_url)
+
+    print("Time now: ", now_str(), flush=True)
+    delay = prepared_play_request.delay_s
+    now = datetime.datetime.now()
+    time = now + datetime.timedelta(seconds=delay)
+    time = time + datetime.timedelta(minutes=1) if time.second != 0 else time
+    print("Time with delay: ", time, flush=True)
+
+    time = time.strftime('%H:%M')
+    app.storage.general['schedule'][time] = (prepared_play_request.summary(), prepared_play_request.to_dict())
+    schedule_ui.refresh()
+    return {"status": "success", "received": json_data, "tts_file": file_url}
 
 
 @ui.page('/')
@@ -28,7 +83,14 @@ def index():
         ui.notify("Saved draft to history", type="positive")
 
     prepared_play_request = PlayRequest.from_dict(presets.DEFAULT_PLAY_REQUEST.to_dict())
-    
+
+    def check_notifications():
+        global notification_message
+        if notification_message:
+            update_ui()
+
+    ui.timer(0.1, check_notifications)
+
     def replace_prepared_play_request(new_request_dict):
         nonlocal prepared_play_request
         prepared_play_request = PlayRequest.from_dict(new_request_dict)
@@ -175,41 +237,43 @@ def index():
                 ui.button(icon='more_time', on_click=time_picker_dialog.open).classes('inline-block').classes('text-xl')
                 ui.button(icon='play_arrow', text='play', on_click=lambda: play_request(prepared_play_request)).classes('inline-block').classes('text-xl')
 
-        @ui.refreshable
-        def schedule_ui():
-            with ui.column().classes('w-full mt-8'):
-                ui.markdown('## Schedule')
-                now_time = datetime.datetime.now().strftime('%H:%M')
-                schedule_items_sorted = sorted(app.storage.general['schedule'].items())
-                schedule_items_sorted_before_now = [item for item in schedule_items_sorted if item[0] < now_time]
-                schedule_items_sorted_after_now = [item for item in schedule_items_sorted if item[0] >= now_time]
-
-                for time, (summary, data) in (schedule_items_sorted_after_now + schedule_items_sorted_before_now):
-                    with ui.card().classes('w-full'), ui.row().classes('w-full items-start'):
-                        ui.label(time).classes('block text-2xl')
-                        ui.label(summary).classes('block grow w-0')
-
-                        with ui.column():
-                            def remove_from_schedule(time):
-                                app.storage.general['schedule'].pop(time)
-                                schedule_ui.refresh()
-
-                            ui.button(icon='delete', color='dark', on_click=lambda time=time: remove_from_schedule(time))
-
-                            def edit_request(time):
-                                (summary, data) = app.storage.general['schedule'].pop(time)
-                                nonlocal prepared_play_request
-                                prepared_play_request = PlayRequest.from_dict(data)
-                                play_request_form.refresh()
-                                schedule_ui.refresh()
-                                ui.notify("Unscheduled and loaded into editor", type="positive")
-
-                            ui.button(icon='edit', color='dark', on_click=lambda time=time: edit_request(time)).classes('block ml-auto')
-
-                if not schedule_items_sorted:
-                    ui.label('(nothing is scheduled)').classes('text-xl')
-
         schedule_ui()
+
+
+@ui.refreshable
+def schedule_ui():
+    with ui.column().classes('w-full mt-8') as schedule:
+        ui.markdown('## Schedule')
+        now_time = datetime.datetime.now().strftime('%H:%M')
+        schedule_items_sorted = sorted(app.storage.general['schedule'].items())
+        schedule_items_sorted_before_now = [item for item in schedule_items_sorted if item[0] < now_time]
+        schedule_items_sorted_after_now = [item for item in schedule_items_sorted if item[0] >= now_time]
+
+        for time, (summary, data) in (schedule_items_sorted_after_now + schedule_items_sorted_before_now):
+            with ui.card().classes('w-full'), ui.row().classes('w-full items-start'):
+                ui.label(time).classes('block text-2xl')
+                ui.html(summary).classes('block grow w-0')
+
+                with ui.column():
+                    def remove_from_schedule(time):
+                        app.storage.general['schedule'].pop(time)
+                        schedule_ui.refresh()
+
+                    ui.button(icon='delete', color='dark', on_click=lambda time=time: remove_from_schedule(time))
+
+                    def edit_request(time):
+                        (summary, data) = app.storage.general['schedule'].pop(time)
+                        # nonlocal prepared_play_request
+                        global prepared_play_request
+                        prepared_play_request = PlayRequest.from_dict(data)
+                        play_request_form.refresh()
+                        schedule_ui.refresh()
+                        ui.notify("Unscheduled and loaded into editor", type="positive")
+
+                    ui.button(icon='edit', color='dark', on_click=lambda time=time: edit_request(time)).classes('block ml-auto')
+
+        if not schedule_items_sorted:
+            ui.label('(nothing is scheduled)').classes('text-xl')
 
 
 async def play_scheduled():
