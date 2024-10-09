@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 
+SNAPSERVER_HOST = "127.0.0.1"
+SNAPSERVER_PORT = 1705
+
 DATA_PATH = Path(os.environ.get("RSD_DATA_PATH", "./data/"))
 TTS_PATH = Path(os.environ.get("RSD_TTS_PATH", "./tmp/"))
 MPD_SOCKET_PATH = Path(os.environ.get("RSD_MPD_SOCKET_PATH", "/tmp/mpd.socket"))

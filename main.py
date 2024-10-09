@@ -3,8 +3,13 @@ from pathlib import Path
 from nicegui import ui, app
 import datetime
 
+from dataclasses import dataclass, field
+from functools import partial
+from typing import Callable
+
 from RSD import config, player, presets
 from RSD.models import PlayRequest, PlayRequestTTSItem, PlayRequestAudioItem
+from RSD.devices import Device, get_connected_clients
 
 
 if not app.storage.general.get('history'):
@@ -12,6 +17,11 @@ if not app.storage.general.get('history'):
 
 if not app.storage.general.get('schedule'):
     app.storage.general['schedule'] = {}
+
+
+get_devices: Callable[[], list[Device]] = partial(
+    get_connected_clients, config.SNAPSERVER_HOST, config.SNAPSERVER_PORT
+)
 
 
 @ui.page('/')
