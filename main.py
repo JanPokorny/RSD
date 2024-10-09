@@ -19,6 +19,18 @@ if not app.storage.general.get('schedule'):
     app.storage.general['schedule'] = {}
 
 
+@dataclass
+class DevicesRowState:
+    devices_expanded: bool = False
+    all_devices_selected: bool = True
+    alling_is_on: bool = False
+    dropping_all: bool = False
+    devices: list[str] = field(default_factory=list)
+    selected: list[bool] = field(default_factory=list)
+    checkboxes: list[ui.checkbox] = field(default_factory=list)
+    all_checkbox: ui.checkbox = ui.checkbox(value=all_devices_selected)
+
+
 get_devices: Callable[[], list[Device]] = partial(
     get_connected_clients, config.SNAPSERVER_HOST, config.SNAPSERVER_PORT
 )
@@ -36,6 +48,8 @@ def index():
         app.storage.general['history'].insert(0, (f"[DRAFT] {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}: {request.summary()}", request.to_dict()))
         history_loader.refresh()
         ui.notify("Saved draft to history", type="positive")
+
+    state = DevicesRowState()
 
     prepared_play_request = PlayRequest.from_dict(presets.DEFAULT_PLAY_REQUEST.to_dict())
     
@@ -122,6 +136,51 @@ def index():
                 request_audio_item_buttons(i)
 
         def play_request_tts_item_form(i: int, item: PlayRequestTTSItem):
+            state.devices = get_devices()
+            state.selected = [True for _ in state.devices]
+            state.checkboxes = [None for _ in state.devices]
+
+            def toggle_devices() -> None:
+                state.devices_expanded = not state.devices_expanded
+                devices_container.set_visibility(state.devices_expanded)
+                refresh_button.set_visibility(state.devices_expanded)
+
+            def toggle_all_devices() -> None:
+                state.all_devices_selected = state.all_checkbox.value
+                if not state.dropping_all:
+                    state.selected = [state.all_devices_selected for _ in state.selected]
+                    state.alling_is_on = True
+                    for checkbox, selected in zip(state.checkboxes, state.selected):
+                        checkbox.set_value(selected)
+                    state.alling_is_on = False
+                print("TOGGLE ALL: ", state.selected, flush=True)
+
+            def toggle_device(idx: int):
+                if len(state.selected) > idx and len(state.checkboxes) > idx:
+                    state.selected[idx] = state.checkboxes[idx].value
+                    if not state.selected[idx] and state.all_devices_selected and not state.alling_is_on:
+                        state.dropping_all = True
+                        state.all_checkbox.set_value(False)
+                        state.dropping_all = False
+
+            def refresh_button():
+                state.devices = get_devices()
+                state.selected = [False for _ in state.devices]
+                state.all_checkbox.set_value(False)
+                devices_container.clear()
+
+                with devices_container:
+                    devices_ui()
+
+            def devices_ui() -> None:
+                with ui.row().classes('flex-wrap w-full max-w-full'):
+                    state.all_checkbox = ui.checkbox('All Devices', value=state.all_checkbox.value,
+                                                     on_change=toggle_all_devices)
+                    state.checkboxes = [
+                        ui.checkbox(device.name, value=state.selected[idx], on_change=partial(toggle_device, idx))
+                        for idx, device in enumerate(state.devices)
+                    ]
+
             with ui.card().classes('w-full my-2'), ui.row().classes('w-full'):
                 ui.icon('record_voice_over').classes('text-5xl p-2')
                 with ui.column().classes('grow'):
@@ -132,6 +191,14 @@ def index():
                     with ui.row().classes('w-full items-center'):
                         ui.icon('repeat').classes('text-2xl')
                         ui.toggle(options={False: "1×", True: "2×"}).bind_value(item, 'repeat')
+                    with ui.row().classes('w-full items-center'):
+                        ui.icon('devices').classes('text-2xl cursor-pointer').on('click', toggle_devices)
+                        refresh_button = ui.button(text="Refresh devices", icon='refresh',
+                                                   on_click=refresh_button).classes('my-2')
+                        refresh_button.set_visibility(False)
+                    with ui.row().classes('w-full ml-8 max-w-lg') as devices_container:
+                        devices_ui()
+                    devices_container.set_visibility(False)
                 request_audio_item_buttons(i)
 
         def request_audio_item_buttons(i: int):
