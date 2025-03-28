@@ -30,24 +30,26 @@ Recommended: Ubuntu 22.04, everything else is _hic sunt leones_.
 
 #### Install
 
+1. Install `uv` through `pipx`: `sudo apt install pipx && pipx ensurepath && pipx install uv`
+2. Start a new terminal so that `uv` is properly loaded, and set up the project using: `uv sync`
+3. Install [MPD](https://github.com/MusicPlayerDaemon/MPD) and [Snapcast](https://github.com/badaix/snapcast), but don't let the default service run:
 ```bash
-sudo apt install -y mpd snapserver snapclient python3.11 python3.11-venv python3-poetry
+sudo apt install -y mpd snapserver snapclient
 sudo systemctl disable snapserver
 sudo pkill snapserver
-poetry install
 ```
 
 #### Run
 
 ```bash
-poetry run honcho start
+uv run honcho start
 ```
 
 Access the web interface on `http://<host IP>:8080`.
 
 > **WARNING:** When first generating audio, the models need to be downloaded. This can take a while and the server will be unresponsive during that time.
 
-> **TIP:** Use [ngrok](https://ngrok.com/) to expose the web interface to the internet and play songs from anywhere!
+> **TIP:** Use [ngrok](https://ngrok.com/) or [devtunnel](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/get-started?tabs=linux) to expose the web interface to the internet and play songs from anywhere!
 
 ### Client
 

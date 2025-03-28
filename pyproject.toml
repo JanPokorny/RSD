@@ -1,21 +1,18 @@
-[tool.poetry]
+[project]
 name = "RSD"
 version = "0.1.0"
 description = ""
-authors = ["Jan Pokorný <jenompokorny@gmail.com>"]
+authors = [ { name = "Jan Pokorný", email="jenompokorny@gmail.com" }]
 readme = "README.md"
-packages = [{include = "RSD"}]
-
-[tool.poetry.dependencies]
-python = "3.11"
-moviepy = "^1.0.3"
-TTS = "^0.22.0"
-python-mpd2 = "^3.1.1"
-nicegui = "^1.4.35"
-
-[tool.poetry.group.dev.dependencies]
-honcho = "^1.1.0"
+requires-python = "==3.11.*"
+dependencies = [
+    "moviepy~=1.0.3",
+    "TTS~=0.22.0",
+    "python-mpd2~=3.1.1",
+    "nicegui~=1.4.35",
+    "honcho~=1.1.0"
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
